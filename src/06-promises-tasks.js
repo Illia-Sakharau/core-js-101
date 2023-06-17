@@ -54,8 +54,15 @@ function willYouMarryMe(isPositiveAnswer) {
  *    })
  *
  */
-function processAllPromises(/* array */) {
-  throw new Error('Not implemented');
+function processAllPromises(array) {
+  const p = new Promise((resolve) => {
+    const res = array.reduce((acc, prom) => {
+      prom.then((el) => acc.push(el));
+      return acc;
+    }, []);
+    resolve(res);
+  });
+  return p;
 }
 
 /**
