@@ -113,32 +113,149 @@ function fromJSON(proto, json) {
  */
 
 const cssSelectorBuilder = {
-  element(/* value */) {
-    throw new Error('Not implemented');
+  Builder: class {
+    constructor() {
+      this.selectors = {};
+      this.flags = {
+        id: false,
+        class: false,
+        attr: false,
+        pseudoClass: false,
+        pseudoElement: false,
+      };
+      this.errText1 = 'Element, id and pseudo-element should not occur more then one time inside the selector';
+      this.errText2 = 'Selector parts should be arranged in the following order: element, id, class, attribute, pseudo-class, pseudo-element';
+    }
+
+    element(value) {
+      if (this.flags.id) {
+        throw new Error(this.errText2);
+      } else if (this.selectors.element) {
+        throw new Error(this.errText1);
+      } else {
+        this.selectors.element = [value];
+      }
+      return this;
+    }
+
+    id(value) {
+      if (this.flags.class) {
+        throw new Error(this.errText2);
+      } else if (this.selectors.id) {
+        throw new Error(this.errText1);
+      } else {
+        this.flags.id = true;
+        this.selectors.id = [`#${value}`];
+      }
+      return this;
+    }
+
+    class(value) {
+      if (this.flags.attr) {
+        throw new Error(this.errText2);
+      } else if (this.selectors.class) {
+        this.selectors.class.push(`.${value}`);
+      } else {
+        this.flags.id = true;
+        this.flags.class = true;
+        this.selectors.class = [`.${value}`];
+      }
+      return this;
+    }
+
+    attr(value) {
+      if (this.flags.pseudoClass) {
+        throw new Error(this.errText2);
+      } else if (this.selectors.attr) {
+        this.selectors.attr.push(`[${value}]`);
+      } else {
+        this.flags.id = true;
+        this.flags.class = true;
+        this.flags.attr = true;
+        this.selectors.attr = [`[${value}]`];
+      }
+      return this;
+    }
+
+    pseudoClass(value) {
+      if (this.flags.pseudoElement) {
+        throw new Error(this.errText2);
+      } else if (this.selectors.pseudoClass) {
+        this.selectors.pseudoClass.push(`:${value}`);
+      } else {
+        this.flags.id = true;
+        this.flags.class = true;
+        this.flags.attr = true;
+        this.flags.pseudoClass = true;
+        this.selectors.pseudoClass = [`:${value}`];
+      }
+      return this;
+    }
+
+    pseudoElement(value) {
+      if (this.selectors.pseudoElement) {
+        throw new Error(this.errText1);
+      } else {
+        this.flags.id = true;
+        this.flags.class = true;
+        this.flags.attr = true;
+        this.flags.pseudoClass = true;
+        this.flags.pseudoElement = true;
+        this.selectors.pseudoElement = [`::${value}`];
+      }
+      return this;
+    }
+
+    stringify() {
+      const element = this.selectors.element ? this.selectors.element.join('') : '';
+      const id = this.selectors.id ? this.selectors.id.join('') : '';
+      const classes = this.selectors.class ? this.selectors.class.join('') : '';
+      const attr = this.selectors.attr ? this.selectors.attr.join('') : '';
+      const pseudoClass = this.selectors.pseudoClass ? this.selectors.pseudoClass.join('') : '';
+      const pseudoElement = this.selectors.pseudoElement ? this.selectors.pseudoElement.join('') : '';
+      return `${element}${id}${classes}${attr}${pseudoClass}${pseudoElement}`;
+    }
   },
 
-  id(/* value */) {
-    throw new Error('Not implemented');
+  element(value) {
+    const b = new this.Builder();
+    return b.element(value);
   },
 
-  class(/* value */) {
-    throw new Error('Not implemented');
+  id(value) {
+    const b = new this.Builder();
+    return b.id(value);
   },
 
-  attr(/* value */) {
-    throw new Error('Not implemented');
+  class(value) {
+    const b = new this.Builder();
+    return b.class(value);
   },
 
-  pseudoClass(/* value */) {
-    throw new Error('Not implemented');
+  attr(value) {
+    const b = new this.Builder();
+    return b.attr(value);
   },
 
-  pseudoElement(/* value */) {
-    throw new Error('Not implemented');
+  pseudoClass(value) {
+    const b = new this.Builder();
+    return b.pseudoClass(value);
   },
 
-  combine(/* selector1, combinator, selector2 */) {
-    throw new Error('Not implemented');
+  pseudoElement(value) {
+    const b = new this.Builder();
+    return b.pseudoElement(value);
+  },
+
+  combine(selector1, combinator, selector2) {
+    const s1 = selector1.stringify();
+    const s2 = selector2.stringify();
+    this.res = `${s1} ${combinator} ${s2}`;
+    return this;
+  },
+
+  stringify() {
+    return this.res;
   },
 };
 
