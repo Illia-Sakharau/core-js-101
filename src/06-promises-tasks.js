@@ -55,14 +55,7 @@ function willYouMarryMe(isPositiveAnswer) {
  *
  */
 function processAllPromises(array) {
-  const p = new Promise((resolve) => {
-    const res = array.reduce((acc, prom) => {
-      prom.then((el) => acc.push(el));
-      return acc;
-    }, []);
-    resolve(res);
-  });
-  return p;
+  return Promise.all(array);
 }
 
 /**
@@ -84,8 +77,8 @@ function processAllPromises(array) {
  *    })
  *
  */
-function getFastestPromise(/* array */) {
-  throw new Error('Not implemented');
+function getFastestPromise(array) {
+  return Promise.race(array);
 }
 
 /**
